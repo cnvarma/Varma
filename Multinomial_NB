@@ -1,0 +1,81 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov  4 11:14:57 2019
+
+@author: nv18358
+"""
+
+import pandas as pd
+from sklearn import metrics
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import confusion_matrix
+from sklearn import svm
+
+
+
+Data_Source=pd.read_excel('C:\DataScience\Data_Share.xlsx', sheetname='Sheet1')
+
+
+Data_Copy=Data_Source.copy()
+
+# Creating categorical varible (converting training label to numeric)
+
+Data_Copy['Model_Category'] = Data_Copy['Training Label'].factorize()[0]
+
+
+
+#Spliting train and test data by 80 and 20 percent respectively
+
+X_train, X_test, y_train, y_test = train_test_split(Data_Copy['Short description'], Data_Copy['Model_Category'], test_size=0.2,random_state = 0)
+
+#Initiating count Vectorizer
+
+count_vect = CountVectorizer()
+X_train_counts = count_vect.fit_transform(X_train)
+
+X_test_counts = count_vect.transform(X_test)
+
+#applying TF and IDF transform
+
+tfidf_transformer = TfidfTransformer()
+X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+
+X_test_tfidf = tfidf_transformer.transform(X_test_counts)
+
+# intiating Multinomial naive bayes
+
+nb = MultinomialNB()
+
+
+# MOdel fiting
+
+nb.fit(X_train_tfidf, y_train)
+
+# Pridicting 
+
+y_pred = nb.predict(X_test_tfidf)
+
+# Pridicting accuracy of the model
+
+conf_mat = confusion_matrix(y_test, y_pred)
+
+accuracy=metrics.accuracy_score(y_test, y_pred)
+
+print("Accuracy: %.2f%%" % (accuracy* 100.0))
+
+
+SVM = svm.SVC(C=1.0, kernel='linear', degree=3, gamma='auto')
+SVM.fit(X_train_tfidf, y_train)
+
+Predict_SVM=SVM.predict(X_test_tfidf)
+
+SVM_Accurecy=metrics.accuracy_score(y_test,Predict_SVM)
+
+
+print("Accurecy SVM: %.2f%%" % (SVM_Accurecy*100))
+
+conf_mat_SVM = confusion_matrix(y_test, Predict_SVM)
